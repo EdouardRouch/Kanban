@@ -1,35 +1,36 @@
 <script>
-  import Kanban from './components/Kanban.vue';
+  import { useUserStore } from './store/user';
+  import LogIn from './components/LogIn.vue';
+  import SignUp from './components/SignUp.vue';
+  import LogOut from './components/LogOut.vue';
   export default {
+    setup() {
+      const userStore = useUserStore();
+      return { userStore }
+    },
     data() {
       return {
-        count: 2,
-        display: true,
-        colors: [{id:1, value:'red'}, 'blue', 'green', 'cyan'],
-        cliqued: ''
-      }
-    },
-    methods: {
-      increment() {
-        this.count++;
-      }
-    },
-    mounted() {
-      this.increment();
-    },
-    computed: {
-      canDisplay() {
-        return this.count > 10;
       }
     },
     components: {
-      Kanban
+      LogIn,
+      SignUp,
+      LogOut
+    },
+    computed: {
+      userLoggedIn() {
+        return this.userStore.user != '';
+      }
+    },
+    created() {
+      this.userStore.isLoggedIn();
     }
   }
 </script>
 
 
 <template>
-  <Kanban :can-display="true" @cliqued="(n) => cliqued = n"/>
-
+    <LogIn v-if="!userLoggedIn" />
+    <SignUp v-if="!userLoggedIn" />
+    <LogOut v-if="userLoggedIn" />
 </template>
