@@ -3,6 +3,7 @@
     include_once '../config/database.php';
     include_once '../objects/user.php';
     include_once '../config/response_body.php';
+    include_once '../config/session_settings.php';
 
     $database = new Database();
     $db = $database->getConnection();
@@ -24,9 +25,7 @@
         try {
             if ($user->login($data->password)) {
                 // paramètres de cookies de sessions requis par les navigateurs modernes.
-                session_set_cookie_params(["SameSite" => "Strict"]);
-                session_set_cookie_params(["Secure" => "true"]);
-                session_set_cookie_params(["HttpOnly" => "true"]);
+                set_up_session_settings();
                 // démarrer la session
                 if (session_start()){
                     $_SESSION["loggedin"] = true;

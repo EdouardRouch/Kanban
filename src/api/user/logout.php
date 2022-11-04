@@ -9,7 +9,8 @@
      
     if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"]) {
         if (session_destroy()) {
-            $_SESSION = array();
+            unset($_SESSION["loggedin"]);
+            unset($_SESSION["username"]);
             http_response_code(200);
             echo json_encode(new ResponseBody("Déconnexion réussie"));
         } else {
