@@ -9,7 +9,7 @@ export const useUserStore = defineStore("user", {
   actions: {
     async signUp(username, password, password_verify) {
       const url = "http://" + window.location.hostname + ":8888";
-      const res = await fetch(url + "/api/user/signup.php", {
+      const res = await fetch(url + "/api/user/create.php", {
         method: "POST",
         headers: {
           'Content-Type': "application/json; charset=UTF-8",

@@ -10,10 +10,10 @@ include_once '../config/response.php';
   
 // instantiate database and product object
 $database = new Database();
-$db = $database->getConnection();
+$conn = $database->getConnection();
   
 // initialize object
-$user = new User($db);
+$user = new User($conn);
   
 // query products
 try {
