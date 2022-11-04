@@ -10,6 +10,7 @@ export default {
             username: '',
             password: '',
             validation: false,
+            status: '',
         }
     },
     methods: {
@@ -26,8 +27,11 @@ export default {
             alertPlaceholder.append(wrapper)
         },
         logIn() {
+            this.status = 'pending';
+            const errorIntro = "Connexion impossible : ";
             this.userStore.logIn(this.username, this.password)
-                .then(() => this.$refs.closeModal.click(), (err) => this.alert(err.message, "danger"));
+                .then(() => this.$refs.closeModal.click(), (err) => this.alert(errorIntro + err.message, "danger"))
+                .then(() => this.status = '');
         },
         clearForm() {
             this.username = '';
@@ -69,9 +73,12 @@ export default {
                                     v-model="password" placeholder="" required>
                                 <label for="password" class="form-label">Mot de passe</label>
                             </div>
-                            <button @click="validation = true" type="submit"
-                                class="btn btn-outline-primary w-100 w-md-auto">Se
-                                connecter</button>
+                            <button @click="validation = true" type="submit" class="btn btn-outline-primary w-100">
+                                <div v-if="status == 'pending'" class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <span v-if="status == ''">Se connecter</span>
+                            </button>
                         </form>
                     </div>
                     <!-- Formulaire de connexion -->

@@ -10,7 +10,8 @@ export default {
             username: '',
             password: '',
             password_verify: '',
-            validation: false
+            validation: false,
+            status: '',
         }
     },
     methods: {
@@ -27,10 +28,13 @@ export default {
             alertPlaceholder.append(wrapper)
         },
         signUp() {
+            this.status = 'pending';
+            const errorIntro = "Création impossible : ";
             this.userStore.signUp(this.username,
                 this.password,
                 this.password_verify)
-                .then(() => this.$refs.close.click(), (err) => this.alert(err.message, "danger"));
+                .then(() => this.$refs.close.click(), (err) => this.alert(errorIntro + err.message, "danger"))
+                .then(() => this.status = '');
         },
         clearForm() {
             this.username = '';
@@ -75,8 +79,12 @@ export default {
                                 <label class="form-label" for="password_verify">Vérifiez votre mot de passe</label>
                             </div>
 
-                            <button @click="validation = true" type="submit"
-                                class="btn btn-outline-primary w-100 w-md-auto">S'inscrire</button>
+                            <button @click="validation = true" type="submit" class="btn btn-outline-primary w-100">
+                                <div v-if="status == 'pending'" class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <span v-if="status == ''">S'inscrire</span>
+                            </button>
                         </form>
                     </div>
 

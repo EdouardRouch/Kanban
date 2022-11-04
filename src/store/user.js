@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 
 export const useUserStore = defineStore("user", {
   state: () => ({
+    status: '',
     user: ''
   }),
 
@@ -21,7 +22,7 @@ export const useUserStore = defineStore("user", {
         }),
       });
 
-      if (!res.ok) { throw await res.json() }
+      if (!res.ok) { throw await res.json(); }
 
       this.user = username;
       return await res.json();
