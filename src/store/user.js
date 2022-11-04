@@ -14,9 +14,11 @@ export const useUserStore = defineStore("user", {
           'Content-Type': "application/json; charset=UTF-8",
         },
         credentials: 'include',
-        body: JSON.stringify({ username: username, 
-                               password: password,
-                               password_verify: password_verify }),
+        body: JSON.stringify({
+          username: username,
+          password: password,
+          password_verify: password_verify
+        }),
       });
 
       if (!res.ok) { throw await res.json() }
@@ -43,7 +45,7 @@ export const useUserStore = defineStore("user", {
     async logOut() {
       const url = "http://" + window.location.hostname + ":8888";
       const res = await fetch(url + "/api/user/logout.php", { credentials: 'include' });
-      
+
       if (!res.ok) { throw await res.json(); }
 
       this.$reset();

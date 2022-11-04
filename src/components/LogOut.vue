@@ -14,5 +14,5 @@
 </script>
 
 <template>
-    <button @click.prevent="logOut">Se déconnecter</button>
+    <button type="button" class="btn btn-outline-danger " @click.prevent="logOut">Se déconnecter</button>
 </template>
