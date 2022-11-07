@@ -1,16 +1,18 @@
-<script>
-    import { useUserStore } from '../store/user';
-    export default {
-        setup() {
-            const userStore = useUserStore();
-            return { userStore };
-        },
-        methods: {
-            logOut() {
-                this.userStore.logOut();
-            }
+<script lang="ts">
+import { useUserStore } from '@/stores/user';
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+    setup() {
+        const userStore = useUserStore();
+        return { userStore };
+    },
+    methods: {
+        logOut(): void {
+            this.userStore.logOut();
         }
     }
+})
 </script>
 
 <template>

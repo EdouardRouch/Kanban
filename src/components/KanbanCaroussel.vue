@@ -1,5 +1,5 @@
 <!-- Caroussel de Kanban, présente un ensemble de Kanbans. -->
-<script>
+<script lang="ts">
 
 </script>
 
