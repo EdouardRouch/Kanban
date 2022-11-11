@@ -28,9 +28,8 @@ export default {
         },
         logIn() {
             this.status = 'pending';
-            const errorIntro = "Connexion impossible : ";
             this.userStore.logIn(this.username, this.password)
-                .then(() => this.$refs.closeModal.click(), (err) => this.alert(errorIntro + err.message, "danger"))
+                .then(() => this.$refs.closeModal.click(), (err) => this.alert(err.message, "danger"))
                 .then(() => this.status = '');
         },
         clearForm() {
