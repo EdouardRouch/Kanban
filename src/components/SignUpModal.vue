@@ -1,6 +1,8 @@
-<script>
-import { useUserStore } from "../store/user"
-export default {
+<script lang="ts">
+import { useUserStore } from "@/stores/user"
+import { defineComponent } from "vue";
+
+export default defineComponent({
     setup() {
         const userStore = useUserStore();
         return { userStore };
@@ -15,36 +17,35 @@ export default {
         }
     },
     methods: {
-        alert(message, type) {
-            const alertPlaceholder = this.$refs.alertPlaceholder;
+        alert(message: string, type: string): void {
+            const alertPlaceholder = this.$refs.alertPlaceholder as HTMLElement;
             const wrapper = document.createElement('div')
             wrapper.innerHTML = [
                 `<div class="alert alert-${type} alert-dismissible" role="alert">`,
                 `   <div>${message}</div>`,
                 '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
                 '</div>'
-            ].join('')
+            ].join('');
 
-            alertPlaceholder.append(wrapper)
+            alertPlaceholder.append(wrapper);
         },
-        signUp() {
+        signUp(): void {
             this.status = 'pending';
-            const errorIntro = "Création impossible : ";
             this.userStore.signUp(this.username,
                 this.password,
                 this.password_verify)
-                .then(() => this.$refs.close.click(), (err) => this.alert(errorIntro + err.message, "danger"))
+                .then(() => (this.$refs.close as HTMLElement).click(), (err) => this.alert(err.message, "danger"))
                 .then(() => this.status = '');
         },
-        clearForm() {
+        clearForm(): void {
             this.username = '';
             this.password = '';
             this.password_verify = '';
             this.validation = false;
-            this.$refs.alertPlaceholder.innerHTML = '';
+            (this.$refs.alertPlaceholder as HTMLElement).innerHTML = '';
         }
     }
-}
+})
 </script>
 
 <template>

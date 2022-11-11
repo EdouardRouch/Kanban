@@ -1,7 +1,9 @@
-<script>
-import { useUserStore } from './store/user';
-import NavBar from './components/NavBar.vue';
-export default {
+<script lang="ts">
+import { useUserStore } from '@/stores/user';
+import NavBar from '@/components/NavBar.vue';
+import { defineComponent } from 'vue';
+
+export default defineComponent({
   setup() {
     const userStore = useUserStore();
     return { userStore }
@@ -21,7 +23,7 @@ export default {
   created() {
     this.userStore.isLoggedIn();
   }
-}
+})
 </script>
 
 

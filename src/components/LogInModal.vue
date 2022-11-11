@@ -1,6 +1,8 @@
-<script>
-import { useUserStore } from '../store/user';
-export default {
+<script lang="ts">
+import { useUserStore } from '@/stores/user';
+import { defineComponent } from 'vue';
+
+export default defineComponent({
     setup() {
         const userStore = useUserStore();
         return { userStore };
@@ -14,8 +16,8 @@ export default {
         }
     },
     methods: {
-        alert(message, type) {
-            const alertPlaceholder = this.$refs.alertPlaceholder;
+        alert(message: string, type: string): void {
+            const alertPlaceholder = this.$refs.alertPlaceholder as HTMLElement;
             const wrapper = document.createElement('div')
             wrapper.innerHTML = [
                 `<div class="alert alert-${type} alert-dismissible" role="alert">`,
@@ -26,20 +28,20 @@ export default {
 
             alertPlaceholder.append(wrapper)
         },
-        logIn() {
+        logIn(): void {
             this.status = 'pending';
             this.userStore.logIn(this.username, this.password)
-                .then(() => this.$refs.closeModal.click(), (err) => this.alert(err.message, "danger"))
+                .then(() => (this.$refs.closeModal as HTMLElement).click(), (err) => this.alert(err.message, "danger"))
                 .then(() => this.status = '');
         },
-        clearForm() {
+        clearForm(): void {
             this.username = '';
             this.password = '';
             this.validation = false;
-            this.$refs.alertPlaceholder.innerHTML = '';
+            (this.$refs.alertPlaceholder as HTMLElement).innerHTML = '';
         }
     }
-}
+})
 </script>
 
 <template>

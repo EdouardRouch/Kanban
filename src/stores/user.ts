@@ -9,7 +9,8 @@ export const useUserStore = defineStore("user", {
   }),
 
   actions: {
-    async signUp(username, password, password_verify) {
+    async signUp(username: string, password: string, password_verify: string) {
+      const url = "http://" + window.location.hostname + ":8888";
       const res = await fetch(url + "/api/user/post.php", {
         method: "POST",
         headers: {
@@ -28,7 +29,8 @@ export const useUserStore = defineStore("user", {
       this.user = username;
       return await res.json();
     },
-    async logIn(username, password) {
+    async logIn(username: string, password: string) {
+      const url = "http://" + window.location.hostname + ":8888";
       const res = await fetch(url + "/api/user/login.php", {
         method: "POST",
         headers: {

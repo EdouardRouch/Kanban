@@ -1,9 +1,11 @@
-<script>
-import { useUserStore } from '../store/user';
+<script lang="ts">
+import { useUserStore } from '@/stores/user';
+import { defineComponent } from 'vue';
 import LogInModal from './LogInModal.vue';
 import SignUpModal from './SignUpModal.vue';
 import LogOut from './LogOut.vue';
-export default {
+
+export default defineComponent({
     setup() {
         const userStore = useUserStore();
         return { userStore }
@@ -13,7 +15,7 @@ export default {
         }
     },
     computed: {
-        userLoggedIn() {
+        userLoggedIn(): boolean {
             return this.userStore.user != '';
         }
     },
@@ -22,7 +24,7 @@ export default {
         SignUpModal,
         LogOut,
     },
-}
+})
 </script>
 
 <template>
