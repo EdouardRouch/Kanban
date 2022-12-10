@@ -14,4 +14,3 @@
         ini_set("session.sid_bits_per_character", 6);
         ini_set("session.hash_function", "sha256");
     }
-?>
