@@ -9,13 +9,21 @@
     "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@tiptap/extension-bubble-menu": "^2.0.0-beta.209",
+    "@tiptap/starter-kit": "^2.0.0-beta.209",
+    "@tiptap/vue-3": "^2.0.0-beta.209",
+    "@volar/typescript": "^1.0.9",
+    "@volar/vue-typescript": "^1.0.9",
     "bootstrap": "^5.2.2",
     "pinia": "^2.0.23",
     "sass": "^1.56.0",
     "vue": "^3.2.41",
-    "vue-router": "^4.1.5"
+    "vue-router": "^4.1.5",
+    "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
+    "@iconify/vue": "^4.0.0",
+    "@types/bootstrap": "^5.2.6",
     "@types/node": "^16.11.68",
     "@vitejs/plugin-vue": "^3.1.2",
     "@vue/tsconfig": "^0.1.3",

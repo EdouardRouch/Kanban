@@ -1,6 +1,7 @@
 <script lang="ts">
 import { useUserStore } from '@/stores/user';
-import NavBar from '@/components/NavBar.vue';
+import NavBar from '@/components/navbar/NavBar.vue';
+import Dashboard from '@/components/Dashboard.vue';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
@@ -13,20 +14,17 @@ export default defineComponent({
     }
   },
   components: {
-    NavBar
-  },
-  computed: {
-    userLoggedIn() {
-      return this.userStore.user != '';
-    }
+    NavBar,
+    Dashboard
   },
   created() {
-    this.userStore.isLoggedIn();
+    this.userStore.setSessionStatus();
   }
 })
 </script>
 
 
 <template>
-  <NavBar />
+  <router-view></router-view>
 </template>
+
