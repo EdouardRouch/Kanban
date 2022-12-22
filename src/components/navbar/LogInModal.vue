@@ -12,7 +12,7 @@ export default defineComponent({
             username: '',
             password: '',
             validation: false,
-            status: '',
+            pending: false,
         }
     },
     methods: {
@@ -29,10 +29,18 @@ export default defineComponent({
             alertPlaceholder.append(wrapper)
         },
         logIn(): void {
-            this.status = 'pending';
+            this.pending = true;
             this.userStore.logIn(this.username, this.password)
-                .then(() => (this.$refs.closeModal as HTMLElement).click(), (err) => this.alert(err.message, "danger"))
-                .then(() => this.status = '');
+                .then(() => {
+                    (this.$refs.closeModal as HTMLElement).click();
+                    if (this.$route.path === "/home") {
+                        this.$router.push('/dashboard');
+                    } else {
+                        this.$router.go(0);
+                    }
+                }
+                    , (err) => this.alert(err.message, "danger"))
+                .then(() => this.pending = false);
         },
         clearForm(): void {
             this.username = '';
@@ -46,7 +54,7 @@ export default defineComponent({
 
 <template>
     <!-- Boite modale -->
-    <div class="modal" tabindex="-1">
+    <div class="modal fade" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -59,9 +67,9 @@ export default defineComponent({
                 <div class="modal-body">
 
                     <!-- Formulaire de connexion -->
-                    <div class="ps-2 pe-2 mb-5">
+                    <div class="ps-2 pe-2 mb-2 mt-2">
                         <div ref="alertPlaceholder" id="alertPlaceholder"></div>
-                        <form :class="{ 'was-validated': validation }" @submit.prevent="logIn()">
+                        <form :class="{ 'was-validated': validation }" @submit.prevent="logIn()" id="logInForm">
 
                             <div class="form-floating mb-2">
                                 <input type="text" class="form-control" name="username" id="username" v-model="username"
@@ -74,16 +82,19 @@ export default defineComponent({
                                     v-model="password" placeholder="" required>
                                 <label for="password" class="form-label">Mot de passe</label>
                             </div>
-                            <button @click="validation = true" type="submit" class="btn btn-outline-primary w-100">
-                                <div v-if="status == 'pending'" class="spinner-border" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                                <span v-if="status == ''">Se connecter</span>
-                            </button>
                         </form>
                     </div>
                     <!-- Formulaire de connexion -->
 
+                </div>
+                <div class="modal-footer">
+                    <button @click="validation = true" type="submit" form="logInForm"
+                        class="btn btn-outline-primary w-100">
+                        <div v-if="pending" class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span v-if="!pending">Se connecter</span>
+                    </button>
                 </div>
             </div>
         </div>

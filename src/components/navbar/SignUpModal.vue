@@ -13,7 +13,7 @@ export default defineComponent({
             password: '',
             password_verify: '',
             validation: false,
-            status: '',
+            pending: false,
         }
     },
     methods: {
@@ -30,12 +30,19 @@ export default defineComponent({
             alertPlaceholder.append(wrapper);
         },
         signUp(): void {
-            this.status = 'pending';
+            this.pending = true;
             this.userStore.signUp(this.username,
                 this.password,
                 this.password_verify)
-                .then(() => (this.$refs.close as HTMLElement).click(), (err) => this.alert(err.message, "danger"))
-                .then(() => this.status = '');
+                .then(() => {
+                    (this.$refs.close as HTMLElement).click();
+                    if (this.$route.path === "/home") {
+                        this.$router.push('/dashboard');
+                    } else {
+                        this.$router.go(0);
+                    }
+                }, (err) => this.alert(err.message, "danger"))
+                .then(() => this.pending = false);
         },
         clearForm(): void {
             this.username = '';
@@ -49,7 +56,7 @@ export default defineComponent({
 </script>
 
 <template>
-    <div class="modal" tabindex="-1">
+    <div class="modal fade" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -59,9 +66,9 @@ export default defineComponent({
                 </div>
                 <div class="modal-body">
 
-                    <div class="mb-5 ps-2 pe-2">
+                    <div class="ps-2 pe-2 mb-2 mt-2">
                         <div ref="alertPlaceholder"></div>
-                        <form :class="{ 'was-validated': validation }" @submit.prevent="signUp">
+                        <form :class="{ 'was-validated': validation }" @submit.prevent="signUp" id="signUpForm">
                             <div class="form-floating mb-2">
                                 <input maxlength="20" type="text" class="form-control" name="username" id="username"
                                     v-model="username" placeholder="" required>
@@ -80,15 +87,19 @@ export default defineComponent({
                                 <label class="form-label" for="password_verify">Vérifiez votre mot de passe</label>
                             </div>
 
-                            <button @click="validation = true" type="submit" class="btn btn-outline-primary w-100">
-                                <div v-if="status == 'pending'" class="spinner-border" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                                <span v-if="status == ''">S'inscrire</span>
-                            </button>
+
                         </form>
                     </div>
 
+                </div>
+                <div class="modal-footer">
+                    <button @click="validation = true" type="submit" form="signUpForm"
+                        class="btn btn-outline-primary w-100">
+                        <div v-if="pending" class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span v-if="!pending">S'inscrire</span>
+                    </button>
                 </div>
             </div>
         </div>

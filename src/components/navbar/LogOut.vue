@@ -9,12 +9,13 @@ export default defineComponent({
     },
     methods: {
         logOut(): void {
-            this.userStore.logOut();
+            this.userStore.logOut().then(res => this.$router.go(0));
         }
     }
 })
 </script>
 
 <template>
-    <button type="button" class="btn btn-outline-danger " @click.prevent="logOut">Se déconnecter</button>
+    <button type="button" class="btn btn-outline-danger w-100 w-md-auto mt-2 mt-md-0" @click.prevent="logOut">Se
+        déconnecter</button>
 </template>
