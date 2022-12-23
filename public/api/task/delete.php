@@ -17,7 +17,7 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"]) {
     // récupérer les données de POST
     if (
         !empty($data->id) &&
-        !empty($data->id_kanban)
+        !empty($data->kanban_id)
     ) {
         // connexion à la BDD
         $database = new Database();
@@ -26,7 +26,7 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"]) {
         // création du Kanban
         $kanban = new Kanban($conn);
         try {
-            $kanban->id = $data->id_kanban;
+            $kanban->id = $data->kanban_id;
         } catch (TypeError $e) {
             http_response_code(400);
             echo json_encode(new ResponseBody($e->getMessage()));
@@ -47,7 +47,7 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"]) {
                 echo json_encode(new ResponseBody("Tâche supprimée avec succès."));
             } catch (PDOException $e) {
                 http_response_code(500);
-                echo json_encode(new ResponseBody("Erreur interne."));
+                echo json_encode(new ResponseBody($e->getMessage()));
             }
         } else {
             http_response_code(401);

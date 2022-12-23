@@ -8,7 +8,7 @@ class Column {
     // object properties
     public int $id;
     public string $title;
-    public string $id_kanban;
+    public int $id_kanban;
 
     // constructor with $db as database connection
     public function __construct($db) {
@@ -49,13 +49,12 @@ class Column {
     }
 
     function get_columns_by_kanban($kanban_id) {
-        $query = "SELECT id, 
-                         title, 
-                         id_Kanban
-                FROM {$this->table_name}
-                INNER JOIN Kanban ON Kanban.id = Columns.id_Kanban
-                WHERE Kanban.id = {$kanban_id}
-                ORDER BY deadline DESC";
+        $query = "SELECT C.id, 
+                         C.title, 
+                         C.id_Kanban
+                FROM {$this->table_name} C
+                INNER JOIN Kanban ON Kanban.id = C.id_Kanban
+                WHERE Kanban.id = {$kanban_id}";
 
         return $this->get($query);
     }

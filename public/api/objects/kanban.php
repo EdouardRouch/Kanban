@@ -1,8 +1,4 @@
 <?php
-
-include_once "./task.php";
-include_once "./column.php";
-
 class Kanban {
     // connexion à la BDD et nom de la table
     private $conn;
@@ -14,10 +10,10 @@ class Kanban {
     public int $id;
     public string $title;
     public bool $public;
-    public string $owner;
+    public string $owner = '';
     public DateTimeImmutable $creation_date;
-
-    private array $columns;
+    public array $authorized_users;
+    public array $unauthorized_users;
 
     // constructeur
     public function __construct($db) {
@@ -25,20 +21,24 @@ class Kanban {
     }
 
     // méthodes
+    public function getId(): int {
+        return $this->id;
+    }
+
     function fetch_kanbans($stmt) {
         $res = array();
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             extract($row);
-            $user_item = array(
+            $kanban_item = array(
                 "id" => $id,
                 "title" => $title,
-                "public" => $public,
+                "public" => (bool) $public,
                 "owner" => $owner,
                 "creation_date" => $creation_date
             );
 
-            array_push($res, $user_item);
+            array_push($res, $kanban_item);
         }
 
         return $res;
@@ -53,8 +53,9 @@ class Kanban {
 
     function get_public_kanbans() {
         $query = "SELECT * 
-                FROM  {$this->table_name}
+                FROM  {$this->table_name} K
                 WHERE PUBLIC = true
+                AND   K.owner != '{$this->owner}'
                 ORDER BY creation_date DESC";
 
         return $this->get($query);
@@ -62,8 +63,8 @@ class Kanban {
 
     function get_private_kanbans() {
         $query = "SELECT *
-                FROM {$this->table_name}
-                WHERE owner = {$this->owner}
+                FROM {$this->table_name} T
+                WHERE T.owner = '{$this->owner}'
                 ORDER BY creation_date DESC";
 
         return $this->get($query);
@@ -71,9 +72,9 @@ class Kanban {
 
     function get_shared_kanbans(string $username) {
         $query = "SELECT T.*
-                FROM {$this->table_name} T, CAN_ACCESS
-                WHERE CAN_ACCESS.id = T.id
-                AND   CAN_ACCESS.user_name = {$username}
+                FROM {$this->table_name} T, Can_Access
+                WHERE Can_Access.id = T.id
+                AND   Can_Access.user = '{$username}'
                 ORDER BY creation_date DESC";
 
         return $this->get($query);
@@ -113,7 +114,7 @@ class Kanban {
     function put() {
         $query = "UPDATE {$this->table_name}
                 SET
-                    public = :public
+                    public = :public,
                     title = :title
                 WHERE id = :id";
 
@@ -126,14 +127,52 @@ class Kanban {
         $stmt->bindParam(":id", $this->id);
 
         $stmt->execute();
+
+        if (!empty($this->authorized_users)) {
+            $this->delete_unauthorized_users();
+            $this->put_authorized_users();
+        }
+    }
+
+    function put_authorized_users() {
+        $query = "INSERT IGNORE INTO Can_ACCESS (id, user) VALUES (:id, :user)";
+
+        $stmt = $this->conn->prepare($query);
+        try {
+            $this->conn->beginTransaction();
+            foreach ($this->authorized_users as $user) {
+                $user = htmlspecialchars(strip_tags($user));
+                $stmt->execute([":id" => $this->id, ":user" => $user]);
+            }
+            $this->conn->commit();
+        } catch (PDOException $e) {
+            $this->conn->rollback();
+            throw $e;
+        }
+    }
+
+    function delete_unauthorized_users() {
+        $query = "DELETE FROM Can_Access WHERE id = :id AND user = :user";
+
+        $stmt = $this->conn->prepare($query);
+        try {
+            $this->conn->beginTransaction();
+            foreach ($this->unauthorized_users as $user) {
+                $user = htmlspecialchars(strip_tags($user));
+                $stmt->execute([":id" => $this->id, ":user" => $user]);
+            }
+            $this->conn->commit();
+        } catch (PDOException $e) {
+            $this->conn->rollback();
+            throw $e;
+        }
     }
 
     function can_access(string $username): bool {
-        $query = "SELECT K.id 
-                FROM {$this->table_name} K
-                INNER JOIN Can_Access ON Can_Access.id = K.id 
-                WHERE K.id = {$this->id}
-                AND  (K.owner = {$username} OR Can_Access.user = {$username})";
+        $query = "SELECT id 
+                FROM Can_Access
+                WHERE id = {$this->id}
+                AND  Can_Access.user = '{$username}'";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -142,9 +181,9 @@ class Kanban {
     }
 
     function is_owner($username): bool {
-        $query = "SELECT K.id 
-                FROM {$this->table_name} K
-                WHERE K.owner = {$username}";
+        $query = "SELECT id 
+                FROM {$this->table_name}
+                WHERE owner = '{$username}'";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -153,9 +192,9 @@ class Kanban {
     }
 
     function is_public(): bool {
-        $query = "SELECT K.id
-                FROM {$this->table_name} K
-                WHERE K.public IS TRUE";
+        $query = "SELECT id
+                FROM {$this->table_name} 
+                WHERE public IS TRUE";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -164,25 +203,40 @@ class Kanban {
     }
 
     function get_details(): array {
-        $kanban = $this->get_kanban_by_id();
+        $kanban = $this->get_kanban_by_id()[0];
         $columns = $this->get_all_columns();
+        $auth_users = $this->get_authorized_users();
 
-        foreach ($columns as $column) {
-            $tasks = $this->get_all_tasks($column["column_id"]);
-            array_push($column, $tasks);
+        foreach ($columns as &$column) {
+            $tasks = $this->get_tasks_by_column($column["id"]);
+            $column["tasks"] = $tasks;
         }
 
-        return array("kanban" => $kanban, "columns" => $columns);
+        return array("kanban" => $kanban, "columns" => $columns, "authorized_users" => $auth_users);
     }
 
     function get_all_columns(): array {
+        include_once "column.php";
         $column = new Column($this->conn);
         return $column->get_columns_by_kanban($this->id);
     }
 
-    function get_all_tasks($column_id): array {
+    function get_tasks_by_column($column_id): array {
+        include_once "task.php";
         $task = new Task($this->conn);
-        return $task->get_tasks_by_kanban($this->id);
+        $task->column_id = (int) $column_id;
+        return $task->get_tasks_by_column();
+    }
+
+    function get_authorized_users(): array {
+        $query = "SELECT user
+                FROM Can_Access
+                WHERE id = {$this->id}";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
     function delete() {

@@ -17,25 +17,30 @@ $conn = $database->getConnection();
 $kanban = new Kanban($conn);
 
 // si l'utilisateur est connecté à un compte
-if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"]) {
+if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] == true) {
     // fixer le propriétaire du Kanban
     $kanban->owner = $_SESSION["username"];
 
     // si la demande concerne un kanban en particulier
     if (isset($_GET['id'])) {
-        $kanban->id = $_GET['id'];
-        if ($kanban->can_access($_SESSION['username'])) {
-            try {
+        $kanban->id = $_GET["id"];
+
+        try {
+            if (
+                $kanban->is_public() ||
+                $kanban->is_owner($_SESSION['username']) ||
+                $kanban->can_access($_SESSION['username'])
+            ) {
                 $records = $kanban->get_details();
                 http_response_code(200);
                 echo json_encode(new ResponseBody("", $records));
-            } catch (PDOException $e) {
-                http_response_code(500);
-                echo json_encode(new ResponseBody("Erreur interne"));
+            } else {
+                http_response_code(401);
+                echo json_encode(new ResponseBody("Vous n'êtes pas autorisé à accéder à cette ressource."));
             }
-        } else {
-            http_response_code(401);
-            echo json_encode(new ResponseBody("Vous n'êtes pas autorisé à accéder à cette ressource."));
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode(new ResponseBody($e->__toString()));
         }
     }
     // si la demande ne concerne pas un kanban particulier
@@ -51,7 +56,7 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"]) {
             echo json_encode(new ResponseBody("", $records));
         } catch (PDOException $e) {
             http_response_code(500);
-            echo json_encode(new ResponseBody("Erreur interne"));
+            echo json_encode(new ResponseBody($e->getMessage()));
         }
     }
 }
@@ -79,7 +84,7 @@ else {
         try {
             $public = $kanban->get_public_kanbans();
             http_response_code(200);
-            echo json_encode(new ResponseBody("", $public));
+            echo json_encode(new ResponseBody("", array("public" => $public)));
         } catch (PDOException $e) {
             http_response_code(500);
             echo json_encode(new ResponseBody("Erreur interne"));

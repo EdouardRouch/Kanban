@@ -49,54 +49,70 @@ class Task {
     }
 
     function get_assigned_tasks() {
-        $query = "SELECT id, 
-                         title, 
-                         description,
-                         TO_CHAR(creation_date, 'YYYY-MM-DD'),
-                         TO_CHAR(deadline, 'YYYY-MM-DD'),
-                         assigned_user,
+        $query = "SELECT T.id, 
+                         T.title, 
+                         T.description,
+                         T.creation_date,
+                         T.deadline,
+                         T.assigned_user,
                          id_Columns column_id,
                          Kanban.id kanban_id
-                FROM {$this->table_name}
-                INNER JOIN Columns ON Columns.id = Task.id_Columns
+                FROM {$this->table_name} T
+                INNER JOIN Columns ON Columns.id = T.id_Columns
                 INNER JOIN Kanban ON Kanban.id = Columns.id_Kanban
-                WHERE assigned_user = {$this->assigned_user}
+                WHERE assigned_user = '{$this->assigned_user}'
                 ORDER BY deadline DESC";
 
         return $this->get($query);
     }
 
     function get_task_by_id() {
-        $query = "SELECT id, 
-                         title, 
-                         description,
-                         TO_CHAR(creation_date, 'YYYY-MM-DD'),
-                         TO_CHAR(deadline, 'YYYY-MM-DD'),
-                         assigned_user,
+        $query = "SELECT T.id, 
+                         T.title, 
+                         T.description,
+                         T.creation_date,
+                         T.deadline,
+                         T.assigned_user,
                          id_Columns column_id,
                          Kanban.id kanban_id
-                FROM {$this->table_name}
-                INNER JOIN Columns ON Columns.id = Task.id_Columns
+                FROM {$this->table_name} T
+                INNER JOIN Columns ON Columns.id = T.id_Columns
                 INNER JOIN Kanban ON Kanban.id = Columns.id_Kanban
-                WHERE id = {$this->id}
+                WHERE T.id = {$this->id}
                 ORDER BY deadline DESC";
 
         return $this->get($query);
     }
 
-    function get_tasks_by_kanban($kanban_id) {
-        $query = "SELECT id, 
-                         title, 
-                         description,
-                         TO_CHAR(creation_date, 'YYYY-MM-DD'),
-                         TO_CHAR(deadline, 'YYYY-MM-DD'),
-                         assigned_user,
-                         id_Columns column_id,
+    function get_tasks_by_column() {
+        $query = "SELECT T.id, 
+                         T.title, 
+                         T.description,
+                         T.creation_date,
+                         T.deadline,
+                         T.assigned_user,
+                         T.id_Columns column_id,
+                         C.id_Kanban kanban_id
+                FROM {$this->table_name} T
+                INNER JOIN Columns C ON T.id_Columns = C.id
+                WHERE id_Columns = {$this->column_id}";
+
+        return $this->get($query);
+    }
+
+    function get_tasks_by_kanban() {
+        $query = "SELECT T.id, 
+                         T.title, 
+                         T.description,
+                         creation_date,
+                         T.deadline,
+                         T.assigned_user,
+                         T.id_Columns column_id,
                          Kanban.id kanban_id
-                FROM {$this->table_name}
+                FROM {$this->table_name} T
                 INNER JOIN Columns ON Columns.id = Task.id_Columns
                 INNER JOIN Kanban ON Kanban.id = Columns.id_Kanban
-                WHERE Kanban.id = {$kanban_id}
+                WHERE Kanban.id = {$this->kanban_id}
                 ORDER BY deadline DESC";
 
         return $this->get($query);
@@ -104,11 +120,11 @@ class Task {
 
     function post() {
         $query = "INSERT INTO {$this->table_name} (title, description, creation_date, deadline, assigned_user, id_Columns)
-                VALUES (:title,
-                        :description,
+                VALUES (NULLIF(:title, ''),
+                        NULLIF(:description, ''),
                         STR_TO_DATE(:creation_date, '{$this->sql_date_format}'), 
                         STR_TO_DATE(:deadline, '{$this->sql_date_format}'),
-                        :assigned_user,
+                        NULLIF(:assigned_user, ''),
                         :id_Columns)";
 
         // préparer la requête
@@ -117,15 +133,14 @@ class Task {
         $creation_date_string = $this->creation_date->format($this->php_date_format);
         $deadline_string = $this->deadline->format($this->php_date_format);
         $this->title = htmlspecialchars(strip_tags($this->title));
-        $this->description = htmlspecialchars(strip_tags($this->description));
         $this->assigned_user = htmlspecialchars(strip_tags($this->assigned_user));
 
         $stmt->bindParam(":title", $this->title);
-        $stmt->bindParam(":description", $this->tile);
+        $stmt->bindParam(":description", $this->description);
         $stmt->bindParam(":creation_date", $creation_date_string);
         $stmt->bindParam(":deadline", $deadline_string);
-        $stmt->bindParam(":assigned_user", $this->assigned_user);
         $stmt->bindParam("id_Columns", $this->column_id);
+        $stmt->bindParam(":assigned_user", $this->assigned_user);
 
         // exécuter la requête
         $stmt->execute();
@@ -134,30 +149,32 @@ class Task {
     function put() {
         $query = "UPDATE {$this->table_name}
                 SET
-                    title = :title,
-                    description = :description,
+                    title = NULLIF(:title, ''),
+                    description = NULLIF(:description, ''),
                     deadline = :deadline,
-                    assigned_user = :assigned_user
+                    assigned_user = NULLIF(:assigned_user, ''),
+                    id_Columns = :column_id
                 WHERE id = :id";
 
         $stmt = $this->conn->prepare($query);
 
         $this->title = htmlspecialchars(strip_tags($this->title));
-        $this->description = htmlspecialchars(strip_tags($this->description));
         $deadline_string = $this->deadline->format($this->php_date_format);
+        $this->assigned_user = htmlspecialchars(strip_tags($this->assigned_user));
 
         $stmt->bindParam(":title", $this->title);
         $stmt->bindParam(":description", $this->description);
         $stmt->bindParam(":deadline", $deadline_string);
         $stmt->bindParam(":assigned_user", $this->assigned_user);
         $stmt->bindParam(":id", $this->id);
+        $stmt->bindParam("column_id", $this->column_id);
 
         $stmt->execute();
     }
 
     function delete() {
-        $query = "DELETE FROM {$this->table_name} T 
-                WHERE T.id = {$this->id}";
+        $query = "DELETE FROM {$this->table_name}
+                WHERE id = {$this->id}";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -176,5 +193,20 @@ class Task {
         $stmt->execute();
 
         return ($stmt->rowCount() > 0);
+    }
+
+    function assign() {
+        $query = "UPDATE {$this->table_name}
+                SET
+                    assigned_user = NULLIF(:assigned_user, '')
+                WHERE id = :id";
+
+        $stmt = $this->conn->prepare($query);
+
+        $this->assigned_user = htmlspecialchars(strip_tags($this->assigned_user));
+        $stmt->bindParam(":id", $this->id);
+        $stmt->bindParam(":assigned_user", $this->assigned_user);
+
+        $stmt->execute();
     }
 }

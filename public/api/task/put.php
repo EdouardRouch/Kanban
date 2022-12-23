@@ -15,34 +15,39 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"]) {
     $data = json_decode(file_get_contents("php://input"));
 
     if (
-        !empty($data->title) &&
-        !empty($data->description) &&
+        !empty($data->id) &&
+        isset($data->title) &&
+        isset($data->description) &&
         !empty($data->deadline) &&
-        !empty($data->assigned_user) &&
+        isset($data->assigned_user) &&
         !empty($data->column_id) &&
-        !empty($data->id_kanban)
+        !empty($data->kanban_id)
     ) {
         // connexion à la BDD
         $database = new Database();
         $conn = $database->getConnection();
 
-        // Création du kanban
+        // création du Kanban
         $kanban = new Kanban($conn);
         try {
-            $kanban->id = $data->id_kanban;
-        } catch (TypeError $e) {
+            $kanban->id = $data->kanban_id;
+        } catch (Error $e) {
             http_response_code(400);
             echo json_encode(new ResponseBody($e->getMessage()));
         }
 
-        if ($kanban->is_owner($_SESSION["username"])) {
-            // création de la tâche
+        if (
+            $kanban->is_owner($_SESSION["username"]) ||
+            ($kanban->can_access($_SESSION["username"]) &&
+                ($data->assigned_user == $_SESSION["username"] ||
+                    $data->assigned_user == ''))
+        ) {
             $task = new Task($conn);
             try {
+                $task->id = $data->id;
                 $task->title = substr($data->title, 0, 20);
-                $task->description = $data->decription;
-                $task->creation_date = new DateTimeImmutable();
-                $task->deadline = DateTimeImmutable::createFromFormat("d/m/Y", $data->deadline);
+                $task->description = $data->description;
+                $task->deadline = DateTimeImmutable::createFromFormat("Y-m-d", $data->deadline);
                 $task->assigned_user = $data->assigned_user;
                 $task->column_id = $data->column_id;
             } catch (TypeError $e) {
@@ -51,29 +56,24 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"]) {
             }
 
             try {
-                $task->post();
+                $task->put();
                 http_response_code(200);
-                echo json_encode(array("message" => "Tâche créée avec succès."));
+                echo json_encode(array("message" => "Tâche modifiée avec succès."));
             } catch (PDOException $e) {
-                if ($e->errorInfo[0] == "23000" && $e->errorInfo[1] == "1452") {
-                    http_response_code(400);
-                    echo json_encode(new ResponseBody("L'utilisateur ou la colonne n'existe pas."));
-                } else {
-                    http_response_code(500);
-                    echo json_encode(new ResponseBody("Erreur interne."));
-                }
+                http_response_code(500);
+                echo json_encode(new ResponseBody($e->__toString()));
             }
         } else {
             http_response_code(401);
-            echo json_encode(new ResponseBody("Vous n'êtes pas autorisé à créer cette ressource."));
+            echo json_encode(new ResponseBody("Vous n'êtes pas autorisé à modifier cette ressource."));
         }
     } else {
         http_response_code(400);
         echo json_encode(new ResponseBody("Les données sont inclomplètes."));
     }
 }
-// si l'utilisateur n'est pas connecté, il ne peut pas créer de Kanban
+// si l'utilisateur n'est pas connecté, il ne peut pas modifier de tâche
 else {
     http_response_code(401);
-    echo json_encode(new ResponseBody("Vous devez être connecté pour créer une tâche."));
+    echo json_encode(new ResponseBody("Vous devez être connecté pour modifier une tâche"));
 }

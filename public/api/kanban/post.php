@@ -3,6 +3,7 @@ include_once "../config/cors.php";
 include_once "../config/database.php";
 include_once "../config/response_body.php";
 include_once "../objects/kanban.php";
+include_once "../objects/column.php";
 
 if (!session_start()) {
     http_response_code(500);
@@ -16,7 +17,8 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"]) {
     if (
         !empty($data->title) &&
         !empty($data->owner) &&
-        isset($data->public)
+        isset($data->public) &&
+        isset($data->columns)
     ) {
         // connexion à la BDD
         $database = new Database();
@@ -36,15 +38,28 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"]) {
 
         try {
             $kanban->post();
+
+            $newColumn = new Column($conn);
+            $kanban_id = $conn->lastInsertId();
+            $newColumn->id_kanban = $kanban_id;
+            $newColumn->title = "Stories";
+            $newColumn->post();
+            foreach ($data->columns as $column) {
+                $newColumn->title = substr($column->title, 0, 20);
+                $newColumn->post();
+            }
+            $newColumn->title = "Terminées";
+            $newColumn->post();
+
             http_response_code(200);
-            echo json_encode(array("message" => "Kanban créé avec succès."));
+            echo json_encode(new ResponseBody("Kanban créé avec succès.", array("kanban_id" => $kanban_id)));
         } catch (PDOException $e) {
             if ($e->errorInfo[0] == "23000" && $e->errorInfo[1] == "1452") {
                 http_response_code(400);
                 echo json_encode(new ResponseBody("L'utilisateur n'existe pas."));
             } else {
                 http_response_code(500);
-                echo json_encode(new ResponseBody("Erreur interne."));
+                echo json_encode(new ResponseBody($e->getMessage()));
             }
         }
     } else {

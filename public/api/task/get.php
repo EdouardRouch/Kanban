@@ -51,7 +51,7 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"]) {
             echo json_encode(new ResponseBody("", $records));
         } catch (PDOException $e) {
             http_response_code(500);
-            echo json_encode(new ResponseBody("Erreur interne."));
+            echo json_encode(new ResponseBody($e->getMessage()));
         }
     }
 }
