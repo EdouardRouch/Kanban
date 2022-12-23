@@ -2,7 +2,8 @@
 import { defineComponent } from 'vue';
 import { useKanbanStore } from '@/stores/kanban';
 import { useUserStore } from '@/stores/user';
-import API_URL from '@/apiUrl';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default defineComponent({
     props: {

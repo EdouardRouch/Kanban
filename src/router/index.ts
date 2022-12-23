@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user';
 import Dashboard from '@/components/Dashboard.vue'
 import Kanban from '@/components/kanban/Kanban.vue'
-import App from '@/App.vue'
 import Home from '@/components/Home.vue'
 import Setup from '@/components/Setup.vue'
 

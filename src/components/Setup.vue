@@ -1,6 +1,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
-import API_URL from '@/apiUrl';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default defineComponent({
     data() {

@@ -2,7 +2,8 @@
 import NavBar from '@/components/navbar/NavBar.vue';
 import { Tooltip } from 'bootstrap';
 import { defineComponent } from 'vue';
-import API_URL from '@/apiUrl';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default defineComponent({
     components: {
