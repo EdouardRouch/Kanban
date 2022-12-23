@@ -50,7 +50,7 @@ export default defineComponent({
                 <input type="text" v-model="config.db_name" class="form-control" id="db_name" required>
             </div>
             <div class="mb-3">
-                <label for="db_user" class="form-label">Utilisateur la base de données :</label>
+                <label for="db_user" class="form-label">Utilisateur de la base de données :</label>
                 <input type="text" v-model="config.db_user" class="form-control" id="db_user" required>
             </div>
             <div class="mb-3">
